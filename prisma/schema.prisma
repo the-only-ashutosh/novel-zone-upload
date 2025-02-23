@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model author {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  route String
+  book  book[]
+}
+
+model book {
+  id          Int        @id @default(autoincrement())
+  title       String     @unique
+  bookUrl     String     @unique
+  imageUrl    String
+  updatedAt   DateTime   @default(now())
+  totalStars  Int
+  isHot       Boolean
+  userrated   Int
+  aspectRatio Decimal    @default(0.000000000000000000000000000000)
+  ratings     Decimal
+  views       Int
+  status      String
+  description Bytes
+  authorId    Int
+  source      String
+  urlShrink   String     @unique
+  author      author     @relation(fields: [authorId], references: [id])
+  chapter     chapter[]
+  recents     recents?
+  category    category[] @relation("booktocategory")
+  genre       genre[]    @relation("booktogenre")
+
+  @@index([authorId], map: "book_authorId_fkey")
+}
+
+model category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  route String
+  book  book[] @relation("booktocategory")
+}
+
+model chapter {
+  id      Int      @id @default(autoincrement())
+  content Bytes
+  url     String
+  likes   Int
+  views   Int
+  title   String
+  number  Int
+  bookId  Int
+  addAt   DateTime @default(now())
+  book    book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId], map: "chapter_bookId_fkey")
+}
+
+model genre {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  route String
+  book  book[] @relation("booktogenre")
+}
+
+model recents {
+  id     Int      @id @default(autoincrement())
+  bookId Int      @unique
+  addAt  DateTime
+  url    String
+  title  String
+  book   book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+}
