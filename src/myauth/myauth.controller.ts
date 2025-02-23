@@ -11,6 +11,7 @@ import { ChapterList } from 'src/types/chapterlist.dto';
 export class MyauthController {
   @Post('addAuthor')
   async createAuthor(@Body() author: Author) {
+    console.log('addAuthor triggered');
     const prisma = new PrismaClient();
     const id = (
       await prisma.author.upsert({
@@ -27,6 +28,7 @@ export class MyauthController {
 
   @Post('addBook')
   async createBook(@Body() book: Book) {
+    console.log('addBook triggered');
     const prisma = new PrismaClient();
     let ret: { id: number; source: string } | null;
     const categories = book.categories.map((category) => {
@@ -99,6 +101,7 @@ export class MyauthController {
 
   @Post('getTotalChapter')
   async totalChapters(@Body() bk: { book: string }) {
+    console.log('getTotalChapter triggered');
     const prisma = new PrismaClient();
     let ret: number;
     try {
@@ -118,6 +121,7 @@ export class MyauthController {
 
   @Post('checkChapterAvailable')
   async check(@Body() chapters: ChapterList) {
+    console.log('checkChapterAvailable triggered');
     const prisma = new PrismaClient();
     const final: Array<{ ch: string; num: number; bookId: number }> = [];
     for (const element of chapters.chapter) {
