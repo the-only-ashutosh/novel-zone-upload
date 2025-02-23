@@ -136,6 +136,7 @@ export class MyauthController {
         final.push(element);
       }
     }
+    await prisma.$disconnect();
     return final;
   }
 }
