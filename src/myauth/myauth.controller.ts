@@ -28,7 +28,7 @@ export class MyauthController {
 
   @Post('addBook')
   async createBook(@Body() book: Book) {
-    console.log('addBook triggered');
+    console.log('addBook triggered', book.bookUrl);
     const prisma = new PrismaClient();
     let ret: { id: number; source: string } | null;
     const categories = book.categories.map((category) => {
@@ -95,7 +95,6 @@ export class MyauthController {
         .catch((r) => null);
     }
     await prisma.$disconnect();
-    console.log(book.bookUrl, ret);
     return ret;
   }
 
@@ -108,11 +107,16 @@ export class MyauthController {
       ret = await prisma.book
         .findFirst({
           where: { bookUrl: bk.book },
-          select: { _count: { select: { chapter: true } } },
+          select: {
+            chapter: {
+              orderBy: { number: 'desc' },
+              take: 1,
+              select: { number: true },
+            },
+          },
         })
-        .then((data) => data!._count.chapter);
+        .then((data) => data!.chapter[0].number);
     } catch (error) {
-      console.log(error);
       ret = 0;
     }
     await prisma.$disconnect();
