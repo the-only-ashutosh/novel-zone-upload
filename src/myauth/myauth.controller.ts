@@ -9,19 +9,19 @@ import { ChapterList } from 'src/types/chapterlist.dto';
 
 @Controller('myauth')
 export class MyauthController {
+  prisma = new PrismaClient();
+
   @Post('addAuthor')
   async createAuthor(@Body() author: Author) {
     console.log('addAuthor triggered');
-    const prisma = new PrismaClient();
     const id = (
-      await prisma.author.upsert({
+      await this.prisma.author.upsert({
         where: { name: author.author },
         create: { name: author.author, route: author.authorRoute },
         update: { name: author.author, route: author.authorRoute },
         select: { id: true },
       })
     ).id;
-    await prisma.$disconnect();
 
     return id;
   }
@@ -29,7 +29,6 @@ export class MyauthController {
   @Post('addBook')
   async createBook(@Body() book: Book) {
     console.log('addBook triggered', book.bookUrl);
-    const prisma = new PrismaClient();
     let ret: { id: number; source: string } | null;
     const categories = book.categories.map((category) => {
       return {
@@ -55,10 +54,8 @@ export class MyauthController {
       };
     });
     try {
-      ret = await prisma.book.upsert({
-        where: {
-          title: book.title,
-        },
+      ret = await this.prisma.book.upsert({
+        where: { title: book.title },
         create: {
           bookUrl: book.bookUrl,
           genre: { connectOrCreate: [...genres] },
@@ -87,24 +84,22 @@ export class MyauthController {
       });
     } catch (err) {
       console.log(err);
-      ret = await prisma.book
+      ret = await this.prisma.book
         .findFirst({
           where: { urlShrink: book.bookUrl.replaceAll('-', '') },
           select: { id: true, source: true },
         })
         .catch((r) => null);
     }
-    await prisma.$disconnect();
     return ret;
   }
 
   @Post('getTotalChapter')
   async totalChapters(@Body() bk: { book: string }) {
     console.log('getTotalChapter triggered');
-    const prisma = new PrismaClient();
     let ret: number;
     try {
-      ret = await prisma.book
+      ret = await this.prisma.book
         .findFirst({
           where: { bookUrl: bk.book },
           select: {
@@ -119,17 +114,15 @@ export class MyauthController {
     } catch (error) {
       ret = 0;
     }
-    await prisma.$disconnect();
     return ret;
   }
 
   @Post('checkChapterAvailable')
   async check(@Body() chapters: ChapterList) {
     console.log('checkChapterAvailable triggered');
-    const prisma = new PrismaClient();
     const final: Array<{ ch: string; num: number; bookId: number }> = [];
     for (const element of chapters.chapter) {
-      const status = await prisma.chapter.findFirst({
+      const status = await this.prisma.chapter.findFirst({
         where: {
           book: { bookUrl: chapters.book },
           number: element.num,
@@ -140,7 +133,18 @@ export class MyauthController {
         final.push(element);
       }
     }
-    await prisma.$disconnect();
     return final;
+  }
+  @Post('newRecents')
+  async updateRecents(@Body() recent: { bookId: number; chNum: number }) {
+    const ret = await this.prisma.recents
+      .upsert({
+        where: { bookId: recent.bookId },
+        create: { bookId: recent.bookId, number: recent.chNum },
+        update: { number: recent.chNum },
+        select: { id: true },
+      })
+      .then((data) => (data.id ? 'Success' : 'Failed'));
+    return ret;
   }
 }

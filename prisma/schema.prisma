@@ -31,6 +31,10 @@ model book {
   authorId    Int
   source      String
   urlShrink   String     @unique
+  daily       Int        @default(0)
+  monthly     Int        @default(0)
+  weekly      Int        @default(0)
+  createdAt   DateTime   @default(now())
   author      author     @relation(fields: [authorId], references: [id])
   chapter     chapter[]
   recents     recents?
@@ -72,8 +76,7 @@ model genre {
 model recents {
   id     Int      @id @default(autoincrement())
   bookId Int      @unique
-  addAt  DateTime
-  url    String
-  title  String
+  addAt  DateTime @updatedAt
+  number Int
   book   book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
 }
